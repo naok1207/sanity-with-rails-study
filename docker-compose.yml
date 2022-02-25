@@ -1,0 +1,42 @@
+version: '3'
+services:
+  web:
+    build: .
+    command: ["sh", "/start.sh"]
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app:cached
+      - /app/vendor
+      - /app/tmp
+      - /app/log
+      - /app/.git
+      - bundle:/usr/local/bundle
+    environment:
+      WEBPACKER_DEV_SERVER_HOST: webpacker
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: "${DATABASE_USER:-foo}"
+      POSTGRES_PASSWORD: "${DATABASE_PASS:-bar}"
+    volumes:
+      - db:/var/lib/postgresql/data:cached
+    ports:
+      - "5432:5432"
+  webpacker:
+    build: .
+    depends_on:
+      - web
+    volumes:
+      - .:/app
+      - bundle:/usr/local/bundle
+    command: ./bin/webpack-dev-server
+    environment:
+      WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+    ports:
+      - "3035:3035"
+volumes:
+  db:
+  bundle:
